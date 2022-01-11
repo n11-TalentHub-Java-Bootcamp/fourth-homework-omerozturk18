@@ -1,0 +1,14 @@
+
+${AnsiColor.BRIGHT_GREEN}   .~~.   .~~.
+${AnsiColor.BRIGHT_GREEN}  '. ${AnsiColor.GREEN}\${AnsiColor.BRIGHT_GREEN} ' ' ${AnsiColor.GREEN}/${AnsiColor.BRIGHT_GREEN} .'
+${AnsiColor.BRIGHT_RED}   .~ ${AnsiColor.BRIGHT_MAGENTA}.~~~.${AnsiColor.BRIGHT_RED}.~.
+${AnsiColor.BRIGHT_RED}  : ${AnsiColor.BRIGHT_MAGENTA}.~.${AnsiColor.BRIGHT_RED}'~'${AnsiColor.BRIGHT_MAGENTA}.~.${AnsiColor.BRIGHT_RED} :      ${AnsiColor.BRIGHT_RED} ______     __    __     ______     ______      ${AnsiColor.BRIGHT_YELLOW}    ______     ______     ______   __  __     ______     __  __
+${AnsiColor.BRIGHT_RED} ~ ${AnsiColor.BRIGHT_MAGENTA}(   )${AnsiColor.BRIGHT_RED} ${AnsiColor.BRIGHT_MAGENTA}(   )${AnsiColor.BRIGHT_RED} ~     ${AnsiColor.BRIGHT_RED}/\  __ \   /\ "-./  \   /\  ___\   /\  == \     ${AnsiColor.BRIGHT_YELLOW}   /\  __ \   /\___  \   /\__  _\ /\ \/\ \   /\  == \   /\ \/ /
+${AnsiColor.BRIGHT_RED}( : ${AnsiColor.BRIGHT_MAGENTA}'~'${AnsiColor.BRIGHT_RED}.~.${AnsiColor.BRIGHT_MAGENTA}'~' ${AnsiColor.BRIGHT_RED}: )    ${AnsiColor.BRIGHT_RED}\ \ \/\ \  \ \ \-./\ \  \ \  __\   \ \  __<     ${AnsiColor.BRIGHT_YELLOW}   \ \ \/\ \  \/_/  /__  \/_/\ \/ \ \ \_\ \  \ \  __<   \ \  _"-.
+${AnsiColor.BRIGHT_RED} ~ ${AnsiColor.BRIGHT_MAGENTA}.~ ${AnsiColor.BRIGHT_RED}(   )${AnsiColor.BRIGHT_MAGENTA} ~. ${AnsiColor.BRIGHT_RED}~     ${AnsiColor.BRIGHT_RED} \ \_____\  \ \_\ \ \_\  \ \_____\  \ \_\ \_\   ${AnsiColor.BRIGHT_YELLOW}    \ \_____\   /\_____\    \ \_\  \ \_____\  \ \_\ \_\  \ \_\ \_\
+${AnsiColor.BRIGHT_RED}  ${AnsiColor.BRIGHT_MAGENTA}(  : ${AnsiColor.BRIGHT_RED}'~' ${AnsiColor.BRIGHT_MAGENTA}:  )  ${AnsiColor.MAGENTA}    ${AnsiColor.BRIGHT_RED}  \/_____/   \/_/  \/_/   \/_____/   \/_/ /_/      ${AnsiColor.BRIGHT_YELLOW}  \/_____/   \/_____/     \/_/   \/_____/   \/_/ /_/   \/_/\/_/
+${AnsiColor.BRIGHT_RED}       ${AnsiColor.BRIGHT_MAGENTA}'~'${AnsiColor.DEFAULT}  ${AnsiColor.BRIGHT_BLUE}
+
+
+${application.title} ${application.version}
+Powered by Spring Boot ${spring-boot.version}
