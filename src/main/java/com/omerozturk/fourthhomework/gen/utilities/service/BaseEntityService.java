@@ -1,8 +1,7 @@
 package com.omerozturk.fourthhomework.gen.utilities.service;
 
-import com.bahadirmemis.n11.n11bootcamp.gen.entity.BaseEntity;
+import com.omerozturk.fourthhomework.gen.utilities.entity.BaseEntity;
 import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 
@@ -11,7 +10,6 @@ import java.util.Optional;
 
 @Service
 @AllArgsConstructor
-//@NoArgsConstructor
 public abstract class BaseEntityService<E extends BaseEntity,D extends JpaRepository> {
 
     private D dao;
