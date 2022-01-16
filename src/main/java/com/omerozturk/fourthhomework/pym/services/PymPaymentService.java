@@ -1,20 +1,23 @@
 package com.omerozturk.fourthhomework.pym.services;
 
 
-import com.omerozturk.fourthhomework.gen.utilities.result.DataResult;
-import com.omerozturk.fourthhomework.gen.utilities.result.Result;
-import com.omerozturk.fourthhomework.gen.utilities.result.SuccessDataResult;
-import com.omerozturk.fourthhomework.gen.utilities.result.SuccessResult;
+import com.omerozturk.fourthhomework.dbt.entities.concretes.DbtDebt;
+import com.omerozturk.fourthhomework.dbt.entities.enums.EnumDbtDebtType;
+import com.omerozturk.fourthhomework.dbt.service.entityservice.DbtDebtEntityService;
+import com.omerozturk.fourthhomework.gen.utilities.result.*;
 import com.omerozturk.fourthhomework.pym.entities.concretes.PymPayment;
 import com.omerozturk.fourthhomework.pym.entities.dtos.PymPaymentDto;
 import com.omerozturk.fourthhomework.pym.entities.dtos.PymPaymentSaveRequestDto;
 import com.omerozturk.fourthhomework.pym.services.entityservice.PymPaymentEntityService;
 import com.omerozturk.fourthhomework.pym.utilities.converter.PymPaymentMapper;
 
+import com.omerozturk.fourthhomework.pym.utilities.exception.PymPaymentException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -25,6 +28,7 @@ import java.util.Optional;
 public class PymPaymentService {
 
     private final PymPaymentEntityService pymPaymentEntityService;
+    private final DbtDebtEntityService dbtDebtEntityService;
 
     public DataResult<List<PymPaymentDto>> findAll() {
         List<PymPayment> pymPaymentList = pymPaymentEntityService.findAll();
@@ -38,11 +42,34 @@ public class PymPaymentService {
         return new SuccessDataResult<PymPaymentDto>(pymPaymentDto,"Veri Listelendi");
     }
 
-    public DataResult<PymPaymentDto> save(PymPaymentSaveRequestDto pymPaymentSaveRequestDto) {
+    @Transactional
+    public DataResult<List<PymPaymentDto>> save(PymPaymentSaveRequestDto pymPaymentSaveRequestDto) {
+        List<PymPayment> pymPaymentList=new ArrayList<>();
         PymPayment pymPayment = PymPaymentMapper.INSTANCE.convertToPymPaymentSaveRequestDto(pymPaymentSaveRequestDto);
+        DbtDebt dbtDebt = findDbtDebtById(pymPayment.getDbtDebtId());
+        pymPaymentEntityService.save(pymPayment);
+        if (dbtDebt==null || dbtDebt.getDebtAmount().intValue()==0){
+            throw new PymPaymentException("Borç Bulunamadı");
+        }
+        DataResult<DbtDebt> dbtDebtDataResult=saveDbtDebtAndDbtDebtLateFee(dbtDebt,pymPayment.getPaymentAmount());
+        pymPayment.setPaymentAmount(dbtDebt.getMainDebt());
         pymPayment = pymPaymentEntityService.save(pymPayment);
-        PymPaymentDto pymPaymentDto = PymPaymentMapper.INSTANCE.convertToPymPaymentDtoList(pymPayment);
-        return new SuccessDataResult<PymPaymentDto>(pymPaymentDto,"Veri Eklendi");
+        pymPaymentList.add(pymPayment);
+        DbtDebt dbtDebtResponse=dbtDebtDataResult.getData();
+        if(dbtDebtResponse.getDebtType()==EnumDbtDebtType.DELAY_HIKE){
+            PymPayment pymPaymentLateFee=new PymPayment();
+            pymPaymentLateFee.setExplanation("Gecikme Cezası Ödemesi");
+            pymPaymentLateFee.setPaymentAmount(dbtDebtResponse.getMainDebt());
+            pymPaymentLateFee.setPaymentDate(new Date());
+            pymPaymentLateFee.setDbtDebtId(dbtDebtResponse.getId());
+            pymPaymentLateFee.setUsrUserId(dbtDebtResponse.getUsrUserId());
+            pymPaymentLateFee = pymPaymentEntityService.save(pymPaymentLateFee);
+            pymPaymentList.add(pymPaymentLateFee);
+
+        }
+
+        List<PymPaymentDto> pymPaymentDtoList = PymPaymentMapper.INSTANCE.convertToPymPaymentDtoList(pymPaymentList);
+        return new SuccessDataResult<List<PymPaymentDto>>(pymPaymentDtoList,"Tahsilat Yapıldı");
     }
 
     public Result delete(Long id) {
@@ -83,4 +110,42 @@ public class PymPaymentService {
         }
         return pymPayment;
     }
+    private DbtDebt findDbtDebtById(Long id) {
+        Optional<DbtDebt>  optionalDbtDebt = dbtDebtEntityService.findById(id);
+        DbtDebt dbtDebt=null;
+        if (optionalDbtDebt.isPresent()){
+            dbtDebt = optionalDbtDebt.get();
+        }
+        return dbtDebt;
+    }
+    private DataResult<DbtDebt> saveDbtDebtAndDbtDebtLateFee(DbtDebt dbtDebt,BigDecimal paymentAmount) {
+
+        dbtDebt.setDebtAmount(new BigDecimal(0));
+        BigDecimal lateFeeAmount=BigDecimal.ZERO;
+        lateFeeAmount = dbtDebtEntityService.findLateFeeAmountById(dbtDebt.getId());
+        BigDecimal totolDebtAmount=BigDecimal.ZERO;
+        totolDebtAmount= new BigDecimal(String.valueOf(dbtDebt.getMainDebt())).add(lateFeeAmount);
+        if( totolDebtAmount.intValue()!=paymentAmount.intValue()){
+            throw new PymPaymentException("Toplam Borç Tutarı ile Girilen Ödeme Tutarı Eşleşmiyor. Topma Borç="+totolDebtAmount);
+        }
+        dbtDebtEntityService.save(dbtDebt);
+        if(lateFeeAmount!=BigDecimal.ZERO){
+            return saveDbtDebtLateFee( dbtDebt, lateFeeAmount);
+        }
+        return new SuccessDataResult<>(dbtDebt) ;
+    }
+    private DataResult<DbtDebt> saveDbtDebtLateFee(DbtDebt dbtDebt,BigDecimal lateFeeAmount){
+        DbtDebt dbtDebtLateFee=new DbtDebt();
+        dbtDebtLateFee.setExplanation("Gecikme Cezası");
+        dbtDebtLateFee.setExpiryDate(new Date());
+        dbtDebtLateFee.setMainDebt(lateFeeAmount);
+        dbtDebtLateFee.setDebtAmount(BigDecimal.ZERO);
+        dbtDebtLateFee.setDebtType(EnumDbtDebtType.DELAY_HIKE);
+        dbtDebtLateFee.setUsrUserId(dbtDebt.getUsrUserId());
+        dbtDebtLateFee.setTopDebtId(dbtDebt.getId());
+
+        dbtDebtLateFee= dbtDebtEntityService.save(dbtDebtLateFee);
+        return new SuccessDataResult<>(dbtDebtLateFee);
+    }
+
 }

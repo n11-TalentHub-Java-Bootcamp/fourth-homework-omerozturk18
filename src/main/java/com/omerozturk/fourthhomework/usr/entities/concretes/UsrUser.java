@@ -4,10 +4,7 @@ import com.omerozturk.fourthhomework.gen.utilities.entity.BaseEntity;
 import com.omerozturk.fourthhomework.usr.entities.enums.EnumUsrUserType;
 import lombok.Data;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
 
 @Entity
 @Table(name = "USR_USER")
@@ -15,7 +12,8 @@ import javax.persistence.Table;
 public class UsrUser implements BaseEntity {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(generator = "generator")
+    @SequenceGenerator(name = "generator", sequenceName = "USR_USER_ID_SEQ")
     private Long id;
     private String name;
     private String shortName;

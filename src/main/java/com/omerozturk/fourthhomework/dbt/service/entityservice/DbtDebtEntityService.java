@@ -6,9 +6,6 @@ import com.omerozturk.fourthhomework.gen.utilities.service.BaseEntityService;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.text.SimpleDateFormat;
-import java.time.temporal.ChronoUnit;
-import java.time.temporal.Temporal;
 import java.util.Date;
 import java.util.List;
 
@@ -62,27 +59,62 @@ public class DbtDebtEntityService extends BaseEntityService<DbtDebt, DbtDebtDao>
         BigDecimal lateFeeAmount = ZERO;
 
         List<DbtDebt> dbtDebtList = getDao().findAllByExpiryDateBeforeAndDebtAmountGreaterThanAndUsrUserId(nowDate,lateFeeAmount,userId);
-        lateFeeAmount=calculateLateFeeAmount(nowDate,dbtDebtList);
+        lateFeeAmount=calculateLateFeeAmountList(nowDate,dbtDebtList);
 
         return lateFeeAmount;
     }
-    private BigDecimal calculateLateFeeAmount(Date nowDate, List<DbtDebt> dbtDebtList){
+    public BigDecimal findLateFeeAmountById(Long debtId) {
+        Date nowDate=new Date();
+        nowDate.setHours(23);
+        nowDate.setMinutes(59);
+        nowDate.setSeconds(59);
+        BigDecimal lateFeeAmount = ZERO;
+
+        DbtDebt dbtDebt =null;
+        dbtDebt=getDao().findById(debtId).get();
+        lateFeeAmount=calculateLateFeeAmount(nowDate,dbtDebt);
+
+        return lateFeeAmount;
+    }
+    private BigDecimal calculateLateFeeAmountList(Date nowDate, List<DbtDebt> dbtDebtList){
         BigDecimal lateFeeAmount = ZERO;
         for(DbtDebt dbtDebt :dbtDebtList){
             long timeDiff = 0;
             timeDiff=nowDate.getTime()-dbtDebt.getExpiryDate().getTime();
             int daysDiff = (int) (timeDiff / (1000 * 60 * 60* 24));
             Double deptAmount = 0.0;
-            if(new Date(2018,01,01).before(dbtDebt.getExpiryDate())){
-                deptAmount = daysDiff * 0.015 * dbtDebt.getMainDebt().doubleValue();
-            }else{
-                deptAmount = daysDiff * 0.02 * dbtDebt.getMainDebt().doubleValue();
+            if(daysDiff>0){
+                if(new Date(2018,01,01).before(dbtDebt.getExpiryDate())){
+                    deptAmount = daysDiff * 0.015 * dbtDebt.getMainDebt().doubleValue();
+                }else{
+                    deptAmount = daysDiff * 0.02 * dbtDebt.getMainDebt().doubleValue();
+                }
             }
-            if(deptAmount<1.0){
+            if(deptAmount<1.0 && deptAmount > 0.0){
                 deptAmount= 1.0;
             }
             lateFeeAmount= new BigDecimal(deptAmount).add(lateFeeAmount);
         }
+        return  lateFeeAmount;
+    }
+    private BigDecimal calculateLateFeeAmount(Date nowDate, DbtDebt dbtDebt){
+        BigDecimal lateFeeAmount = ZERO;
+            long timeDiff = 0;
+            timeDiff=nowDate.getTime()-dbtDebt.getExpiryDate().getTime();
+            int daysDiff = (int) (timeDiff / (1000 * 60 * 60* 24));
+            Double deptAmount = 0.0;
+            if(daysDiff>0){
+                if(new Date(2018,01,01).before(dbtDebt.getExpiryDate())){
+                    deptAmount = daysDiff * 0.015 * dbtDebt.getMainDebt().doubleValue();
+                }else{
+                    deptAmount = daysDiff * 0.02 * dbtDebt.getMainDebt().doubleValue();
+                }
+            }
+            if(deptAmount < 1.0 && deptAmount > 0.0){
+                deptAmount= 1.0;
+            }
+            lateFeeAmount= new BigDecimal(deptAmount).add(lateFeeAmount);
+
         return  lateFeeAmount;
     }
 }
