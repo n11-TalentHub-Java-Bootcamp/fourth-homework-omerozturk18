@@ -20,38 +20,46 @@ public class UsrUserController {
 
     @GetMapping
     public ResponseEntity getAll(){
-
-        List<UsrUserDto> usrUserDtoList = usrUserService.findAll();
-
-        return ResponseEntity.ok(usrUserDtoList);
+        var result = usrUserService.findAll();
+        if (result.isSuccess()){
+            return ResponseEntity.ok(result);
+        }
+        return ResponseEntity.badRequest().body(result);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity getById(@PathVariable Long id){
-
-        UsrUserDto usrUserDto = usrUserService.findById(id);
-
-        return ResponseEntity.ok(usrUserDto);
+        var result =  usrUserService.findById(id);
+        if (result.isSuccess()){
+            return ResponseEntity.ok(result);
+        }
+        return ResponseEntity.badRequest().body(result);
     }
 
     @GetMapping("/username/{username}")
     public ResponseEntity getByUsername(@PathVariable String username){
-
-        UsrUserDto usrUserDto = usrUserService.findByUsername(username);
-
-        return ResponseEntity.ok(usrUserDto);
+        var result =  usrUserService.findByUsername(username);
+        if (result.isSuccess()){
+            return ResponseEntity.ok(result);
+        }
+        return ResponseEntity.badRequest().body(result);
     }
 
     @PostMapping
     public ResponseEntity create(@RequestBody UsrUserSaveRequestDto usrUserSaveRequestDto){
-
-        UsrUserDto usrUserDto = usrUserService.save(usrUserSaveRequestDto);
-
-        return ResponseEntity.ok(usrUserDto);
+        var result = usrUserService.save(usrUserSaveRequestDto);
+        if (result.isSuccess()){
+            return ResponseEntity.ok(result);
+        }
+        return ResponseEntity.badRequest().body(result);
     }
 
     @DeleteMapping("/{id}")
-    public void delete(@PathVariable Long id){
-        usrUserService.delete(id);
+    public ResponseEntity delete(@PathVariable Long id){
+        var result = usrUserService.delete(id);
+        if (result.isSuccess()){
+            return ResponseEntity.ok(result);
+        }
+        return ResponseEntity.badRequest().body(result);
     }
 }

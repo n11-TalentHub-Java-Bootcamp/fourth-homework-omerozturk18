@@ -1,4 +1,4 @@
-package com.omerozturk.fourthhomework.usr.dataAccess.concretes;
+package com.omerozturk.fourthhomework.usr.dataAccess.abstracts;
 
 
 import com.omerozturk.fourthhomework.usr.entities.concretes.UsrUser;

@@ -2,7 +2,7 @@ package com.omerozturk.fourthhomework.usr.service.entityservice;
 
 
 import com.omerozturk.fourthhomework.gen.utilities.service.BaseEntityService;
-import com.omerozturk.fourthhomework.usr.dataAccess.concretes.UsrUserDao;
+import com.omerozturk.fourthhomework.usr.dataAccess.abstracts.UsrUserDao;
 import com.omerozturk.fourthhomework.usr.entities.concretes.UsrUser;
 import org.springframework.stereotype.Service;
 

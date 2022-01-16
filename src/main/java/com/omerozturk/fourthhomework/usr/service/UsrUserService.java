@@ -1,6 +1,10 @@
 package com.omerozturk.fourthhomework.usr.service;
 
 
+import com.omerozturk.fourthhomework.gen.utilities.result.DataResult;
+import com.omerozturk.fourthhomework.gen.utilities.result.Result;
+import com.omerozturk.fourthhomework.gen.utilities.result.SuccessDataResult;
+import com.omerozturk.fourthhomework.gen.utilities.result.SuccessResult;
 import com.omerozturk.fourthhomework.usr.entities.concretes.UsrUser;
 import com.omerozturk.fourthhomework.usr.entities.dtos.UsrUserDto;
 import com.omerozturk.fourthhomework.usr.entities.dtos.UsrUserSaveRequestDto;
@@ -18,58 +22,42 @@ public class UsrUserService {
 
     private final UsrUserEntityService usrUserEntityService;
 
-    public List<UsrUserDto> findAll() {
-
+    public DataResult<List<UsrUserDto>> findAll() {
         List<UsrUser> usrUserList = usrUserEntityService.findAll();
-
         List<UsrUserDto> usrUserDtoList = UsrUserMapper.INSTANCE.convertToUsrUserDtoList(usrUserList);
-
-        return usrUserDtoList;
+        return new SuccessDataResult<List<UsrUserDto>>(usrUserDtoList,"Veriler Listelendi");
     }
 
-    public UsrUserDto findById(Long id) {
-
+    public DataResult<UsrUserDto> findById(Long id) {
         UsrUser usrUser = findUsrUserById(id);
-
         UsrUserDto usrUserDto = UsrUserMapper.INSTANCE.convertToUsrUserDtoList(usrUser);
-
-        return usrUserDto;
+        return new SuccessDataResult<UsrUserDto>(usrUserDto,"Veri Listelendi");
     }
 
-    public UsrUserDto findByUsername(String username) {
-
+    public DataResult<UsrUserDto> findByUsername(String username) {
         UsrUser usrUser = usrUserEntityService.findByUsername(username);
-
         if (usrUser == null){
             throw new RuntimeException("User not found!");
         }
-
         UsrUserDto usrUserDto = UsrUserMapper.INSTANCE.convertToUsrUserDtoList(usrUser);
-
-        return usrUserDto;
+        return new SuccessDataResult<UsrUserDto>(usrUserDto,"Veri Listelendi");
     }
 
-    public UsrUserDto save(UsrUserSaveRequestDto usrUserSaveRequestDto) {
-
+    public DataResult<UsrUserDto> save(UsrUserSaveRequestDto usrUserSaveRequestDto) {
         UsrUser usrUser = UsrUserMapper.INSTANCE.convertToUsrUserSaveRequestDto(usrUserSaveRequestDto);
-
         usrUser = usrUserEntityService.save(usrUser);
-
         UsrUserDto usrUserDto = UsrUserMapper.INSTANCE.convertToUsrUserDtoList(usrUser);
-
-        return usrUserDto;
+        return new SuccessDataResult<UsrUserDto>(usrUserDto,"Veri Eklendi");
     }
 
-    public void delete(Long id) {
-
+    public Result delete(Long id) {
         UsrUser usrUser = findUsrUserById(id);
-
         usrUserEntityService.delete(usrUser);
+        return new SuccessResult(" Veri Silindi");
     }
 
     private UsrUser findUsrUserById(Long id) {
         Optional<UsrUser> optionalUsrUser = usrUserEntityService.findById(id);
-
         UsrUser usrUser;
         if (optionalUsrUser.isPresent()){
             usrUser = optionalUsrUser.get();
