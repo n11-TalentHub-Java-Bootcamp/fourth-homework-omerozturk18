@@ -3,7 +3,7 @@ package com.omerozturk.fourthhomework.dbt.api.controller;
 
 
 import com.omerozturk.fourthhomework.dbt.entities.dtos.DbtDebtSaveRequestDto;
-import com.omerozturk.fourthhomework.dbt.service.DbtDebtService;
+import com.omerozturk.fourthhomework.dbt.service.abstracts.DbtDebtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
@@ -55,7 +55,7 @@ public class DbtDebtController {
         return ResponseEntity.badRequest().body(result);
     }
     @GetMapping("/date-range/{startDate}/{endDate}")
-    public ResponseEntity getByDateRange(@PathVariable @DateTimeFormat(pattern = "dd.MM.yyyy") Date startDate, @PathVariable @DateTimeFormat(pattern = "dd.MM.yyyy") Date endDate){
+    public ResponseEntity getByDateRange(@PathVariable @DateTimeFormat(pattern = "yyyy-MM-dd") Date startDate, @PathVariable @DateTimeFormat(pattern = "yyyy-MM-dd") Date endDate){
         var result =  dbtDebtService.getByDateRange(startDate,endDate);
         if (result.isSuccess()){
             return ResponseEntity.ok(result);

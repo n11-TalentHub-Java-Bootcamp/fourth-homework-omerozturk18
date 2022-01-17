@@ -1,26 +1,30 @@
-package com.omerozturk.fourthhomework.dbt.service;
+package com.omerozturk.fourthhomework.dbt.service.concretes;
 
 import com.omerozturk.fourthhomework.dbt.entities.concretes.DbtDebt;
 import com.omerozturk.fourthhomework.dbt.entities.dtos.DbtDebtDto;
 import com.omerozturk.fourthhomework.dbt.entities.dtos.DbtDebtSaveRequestDto;
+import com.omerozturk.fourthhomework.dbt.service.abstracts.DbtDebtService;
 import com.omerozturk.fourthhomework.dbt.service.entityservice.DbtDebtEntityService;
 
 import com.omerozturk.fourthhomework.dbt.utilities.converter.DbtDebtMapper;
+import com.omerozturk.fourthhomework.dbt.utilities.exception.DbtDebtNotFoundException;
 import com.omerozturk.fourthhomework.gen.utilities.result.*;
+import com.omerozturk.fourthhomework.usr.entities.dtos.UsrUserDto;
+import com.omerozturk.fourthhomework.usr.service.abstracts.UsrUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 
 
 @Service
 @RequiredArgsConstructor
-public class DbtDebtService {
+public class DbtDebtManager implements DbtDebtService {
 
     private final DbtDebtEntityService dbtDebtEntityService;
+    private final UsrUserService usrUserService;
 
     public DataResult<List<DbtDebtDto>> findAll() {
         List<DbtDebt> dbtDebtList = dbtDebtEntityService.findAll();
@@ -29,22 +33,26 @@ public class DbtDebtService {
     }
 
     public DataResult<DbtDebtDto> findById(Long id) {
-        DbtDebt dbtDebt = findDbtDebtById(id);
+        DbtDebt dbtDebt = dbtDebtEntityService.findById(id);
+        if (dbtDebt == null){
+            throw new DbtDebtNotFoundException("Borç Bulunanamdı!");
+        }
         DbtDebtDto dbtDebtDto = DbtDebtMapper.INSTANCE.convertToDbtDebtDtoList(dbtDebt);
-        return new SuccessDataResult<DbtDebtDto>(dbtDebtDto,"Broç Listelendi");
+        return new SuccessDataResult<DbtDebtDto>(dbtDebtDto,"Borç Listelendi");
     }
 
     public DataResult<DbtDebtDto> save(DbtDebtSaveRequestDto dbtDebtSaveRequestDto) {
         DbtDebt dbtDebt = DbtDebtMapper.INSTANCE.convertToDbtDebtSaveRequestDto(dbtDebtSaveRequestDto);
+        DataResult<UsrUserDto> usrUserDtoDataResult = usrUserService.findById(dbtDebt.getUsrUserId());
         dbtDebt = dbtDebtEntityService.save(dbtDebt);
         DbtDebtDto dbtDebtDto = DbtDebtMapper.INSTANCE.convertToDbtDebtDtoList(dbtDebt);
         return new SuccessDataResult<DbtDebtDto>(dbtDebtDto,"Borç Eklendi");
     }
 
     public Result delete(Long id) {
-        DbtDebt dbtDebt = findDbtDebtById(id);
-        if (dbtDebt==null){
-            return new ErorrResult(" Borç Bulunamadı");
+        DbtDebt dbtDebt = dbtDebtEntityService.findById(id);
+        if (dbtDebt == null){
+            throw new DbtDebtNotFoundException("Borç Bulunanamdı!");
         }
         dbtDebtEntityService.delete(dbtDebt);
         return new SuccessResult(" Borç Silindi");
@@ -80,17 +88,5 @@ public class DbtDebtService {
         BigDecimal total =BigDecimal.ZERO;
         total=dbtDebtEntityService.findLateFeeAmountByUser(userId);
         return new SuccessDataResult<BigDecimal>(total,"Kullanıcıya Ait Toplam Gecikme Zammı Tutarı");
-    }
-
-
-    private DbtDebt findDbtDebtById(Long id) {
-        Optional<DbtDebt> optionalDbtDebt = dbtDebtEntityService.findById(id);
-        DbtDebt dbtDebt;
-        if (optionalDbtDebt.isPresent()){
-            dbtDebt = optionalDbtDebt.get();
-        } else {
-            return  null;
-        }
-        return dbtDebt;
     }
 }

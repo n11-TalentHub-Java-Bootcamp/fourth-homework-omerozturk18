@@ -1,14 +1,11 @@
 package com.omerozturk.fourthhomework.usr.api.controller;
 
 
-import com.omerozturk.fourthhomework.usr.entities.dtos.UsrUserDto;
 import com.omerozturk.fourthhomework.usr.entities.dtos.UsrUserSaveRequestDto;
-import com.omerozturk.fourthhomework.usr.service.UsrUserService;
+import com.omerozturk.fourthhomework.usr.service.abstracts.UsrUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/users")

@@ -4,9 +4,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 @ResponseStatus(HttpStatus.NOT_FOUND)
-public class PymPaymentException extends RuntimeException {
+public class PymPaymentNotFoundException extends RuntimeException {
 
-    public PymPaymentException(String message) {
+    public PymPaymentNotFoundException(String message) {
         super(message);
     }
 }

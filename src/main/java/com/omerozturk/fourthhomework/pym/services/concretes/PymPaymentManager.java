@@ -1,17 +1,21 @@
-package com.omerozturk.fourthhomework.pym.services;
+package com.omerozturk.fourthhomework.pym.services.concretes;
 
 
 import com.omerozturk.fourthhomework.dbt.entities.concretes.DbtDebt;
 import com.omerozturk.fourthhomework.dbt.entities.enums.EnumDbtDebtType;
 import com.omerozturk.fourthhomework.dbt.service.entityservice.DbtDebtEntityService;
+import com.omerozturk.fourthhomework.dbt.utilities.exception.DbtDebtNotFoundException;
 import com.omerozturk.fourthhomework.gen.utilities.result.*;
 import com.omerozturk.fourthhomework.pym.entities.concretes.PymPayment;
 import com.omerozturk.fourthhomework.pym.entities.dtos.PymPaymentDto;
 import com.omerozturk.fourthhomework.pym.entities.dtos.PymPaymentSaveRequestDto;
+import com.omerozturk.fourthhomework.pym.services.abstracts.PymPaymentService;
 import com.omerozturk.fourthhomework.pym.services.entityservice.PymPaymentEntityService;
 import com.omerozturk.fourthhomework.pym.utilities.converter.PymPaymentMapper;
 
-import com.omerozturk.fourthhomework.pym.utilities.exception.PymPaymentException;
+import com.omerozturk.fourthhomework.pym.utilities.exception.PymPaymentNotFoundException;
+import com.omerozturk.fourthhomework.usr.entities.dtos.UsrUserDto;
+import com.omerozturk.fourthhomework.usr.service.abstracts.UsrUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,15 +24,15 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 
 
 @Service
 @RequiredArgsConstructor
-public class PymPaymentService {
+public class PymPaymentManager implements PymPaymentService {
 
     private final PymPaymentEntityService pymPaymentEntityService;
     private final DbtDebtEntityService dbtDebtEntityService;
+    private final UsrUserService usrUserService;
 
     public DataResult<List<PymPaymentDto>> findAll() {
         List<PymPayment> pymPaymentList = pymPaymentEntityService.findAll();
@@ -37,7 +41,10 @@ public class PymPaymentService {
     }
 
     public DataResult<PymPaymentDto> findById(Long id) {
-        PymPayment pymPayment = findPymPaymentById(id);
+        PymPayment pymPayment = pymPaymentEntityService.findById(id);
+        if (pymPayment == null){
+            throw new PymPaymentNotFoundException("Ödeme Bulunanamdı!");
+        }
         PymPaymentDto pymPaymentDto = PymPaymentMapper.INSTANCE.convertToPymPaymentDtoList(pymPayment);
         return new SuccessDataResult<PymPaymentDto>(pymPaymentDto,"Veri Listelendi");
     }
@@ -46,10 +53,11 @@ public class PymPaymentService {
     public DataResult<List<PymPaymentDto>> save(PymPaymentSaveRequestDto pymPaymentSaveRequestDto) {
         List<PymPayment> pymPaymentList=new ArrayList<>();
         PymPayment pymPayment = PymPaymentMapper.INSTANCE.convertToPymPaymentSaveRequestDto(pymPaymentSaveRequestDto);
-        DbtDebt dbtDebt = findDbtDebtById(pymPayment.getDbtDebtId());
+        DataResult<UsrUserDto> usrUserDtoDataResult = usrUserService.findById(pymPayment.getUsrUserId());
+        DbtDebt dbtDebt = dbtDebtEntityService.findById(pymPayment.getDbtDebtId());
         pymPaymentEntityService.save(pymPayment);
         if (dbtDebt==null || dbtDebt.getDebtAmount().intValue()==0){
-            throw new PymPaymentException("Borç Bulunamadı");
+            throw new DbtDebtNotFoundException("Borç Bulunamadı");
         }
         DataResult<DbtDebt> dbtDebtDataResult=saveDbtDebtAndDbtDebtLateFee(dbtDebt,pymPayment.getPaymentAmount());
         pymPayment.setPaymentAmount(dbtDebt.getMainDebt());
@@ -73,7 +81,10 @@ public class PymPaymentService {
     }
 
     public Result delete(Long id) {
-        PymPayment pymPayment = findPymPaymentById(id);
+        PymPayment pymPayment = pymPaymentEntityService.findById(id);
+        if (pymPayment == null){
+            throw new PymPaymentNotFoundException("Ödeme Bulunanamdı!");
+        }
         pymPaymentEntityService.delete(pymPayment);
         return new SuccessResult(" Veri Silindi");
     }
@@ -100,24 +111,8 @@ public class PymPaymentService {
         return new SuccessDataResult<List<PymPaymentDto>>(pymPaymentDtoList,"Kullanın Ödediği Gecikme Cezaları Listeleniyor");
     }
 
-    private PymPayment findPymPaymentById(Long id) {
-        Optional<PymPayment> optionalPymPayment = pymPaymentEntityService.findById(id);
-        PymPayment pymPayment;
-        if (optionalPymPayment.isPresent()){
-            pymPayment = optionalPymPayment.get();
-        } else {
-            throw new RuntimeException("User not found!");
-        }
-        return pymPayment;
-    }
-    private DbtDebt findDbtDebtById(Long id) {
-        Optional<DbtDebt>  optionalDbtDebt = dbtDebtEntityService.findById(id);
-        DbtDebt dbtDebt=null;
-        if (optionalDbtDebt.isPresent()){
-            dbtDebt = optionalDbtDebt.get();
-        }
-        return dbtDebt;
-    }
+
+
     private DataResult<DbtDebt> saveDbtDebtAndDbtDebtLateFee(DbtDebt dbtDebt,BigDecimal paymentAmount) {
 
         dbtDebt.setDebtAmount(new BigDecimal(0));
@@ -126,7 +121,7 @@ public class PymPaymentService {
         BigDecimal totolDebtAmount=BigDecimal.ZERO;
         totolDebtAmount= new BigDecimal(String.valueOf(dbtDebt.getMainDebt())).add(lateFeeAmount);
         if( totolDebtAmount.intValue()!=paymentAmount.intValue()){
-            throw new PymPaymentException("Toplam Borç Tutarı ile Girilen Ödeme Tutarı Eşleşmiyor. Topma Borç="+totolDebtAmount);
+            throw new PymPaymentNotFoundException("Toplam Borç Tutarı ile Girilen Ödeme Tutarı Eşleşmiyor. Topma Borç="+totolDebtAmount);
         }
         dbtDebtEntityService.save(dbtDebt);
         if(lateFeeAmount!=BigDecimal.ZERO){

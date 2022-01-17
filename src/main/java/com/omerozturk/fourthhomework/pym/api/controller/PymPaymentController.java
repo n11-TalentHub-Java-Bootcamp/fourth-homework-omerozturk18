@@ -2,17 +2,15 @@ package com.omerozturk.fourthhomework.pym.api.controller;
 
 
 
-import com.omerozturk.fourthhomework.pym.entities.dtos.PymPaymentDto;
 import com.omerozturk.fourthhomework.pym.entities.dtos.PymPaymentSaveRequestDto;
-import com.omerozturk.fourthhomework.pym.services.PymPaymentService;
 
+import com.omerozturk.fourthhomework.pym.services.abstracts.PymPaymentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Date;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/payments")
@@ -58,7 +56,7 @@ public class PymPaymentController {
         return ResponseEntity.badRequest().body(result);
     }
     @GetMapping("/date-range/{startDate}/{endDate}")
-    public ResponseEntity getByDateRange(@PathVariable @DateTimeFormat(pattern = "dd.MM.yyyy") Date startDate, @PathVariable @DateTimeFormat(pattern = "dd.MM.yyyy") Date endDate){
+    public ResponseEntity getByDateRange(@PathVariable @DateTimeFormat(pattern = "yyyy-MM-dd") Date startDate, @PathVariable @DateTimeFormat(pattern = "yyyy-MM-dd") Date endDate){
         var result =  pymPaymentService.getByDateRange(startDate,endDate);
         if (result.isSuccess()){
             return ResponseEntity.ok(result);
